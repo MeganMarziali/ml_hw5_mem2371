@@ -52,7 +52,7 @@ alc_train = training$alc_consumption
 alc_test = testing$alc_consumption
 
 #Model.matrix shortcut to removing outcome variable from matrix
-x_train = model.matrix(alc_consumption~., training)[,-1] # Check what the [-1] does
+x_train = model.matrix(alc_consumption~., training)[,-1]
 x_test = model.matrix(alc_consumption~., testing)[,-1]
 
 # Convert the outcome (class) to a numerical variable for glmnet
@@ -73,17 +73,11 @@ model.1 = train(
 param = model.1$bestTune
 
 # Model coefficients
-coef(model.1$finalModel, model.1$bestTune$lambda) # ask about final model, where is this coming from?
+coef(model.1$finalModel, model.1$bestTune$lambda)
 
-# Make predictions ==== evaluating
-
-en.pred <- model.1 %>% predict(x_test)
-
-#model.1.train.final = glmnet(x_train, alc_train, alpha = param$alpha, lambda = param$lambda, family = binomial)
-#coef(model.1.train.final)
-
-#model_1 = glmnet(x_train, alc_c, family = binomial, alpha = param$alpha, lambda = param$lambda)
-#coef(model_1)
+# Fitting model
+model_1 = glmnet(x_train, alc_train, family = binomial, alpha = param$alpha, lambda = param$lambda)
+coef(model_1)
 ```
 
 ### 1.2: Model that uses logistic regression
@@ -112,75 +106,40 @@ coef(model_3_final)
 
 ```{r}
 fitted.results = predict(model_1, x_test, type = 'response') 
-fitted.results.p = ifelse(fitted.results > 0.5, 1, 0)
+fitted.results.p = ifelse(fitted.results > 0.5,1,0)
 
 testing.outcome = (as.numeric(testing$alc_consumption) - 1)
 
-model.1.test.pred = model_1 %>% predict(x_test) %>% as.vector()
-
-misClasificError = mean(model.1.test.pred != testing$alc_consumption, na.rm = T)
+misClasificError = mean(fitted.results.p != testing.outcome, na.rm = T)
 print(paste('Accuracy Model 1',1 - misClasificError))
-
-#testProbs <- data.frame(obs = testing$alc_consumption,
-#                        pred.logit = fitted.results)
-#calPlotData = calibration(obs ~ pred.logit, 
-#                          data = testProbs, 
-#                          class = "NotCurrentUse", 
-#                          cuts = 5)
-
-# Make predictions on the test data
-probabilities = model_1 %>% predict(newx = x_test)
-predicted.classes = ifelse(probabilities > 0.5, "CurrentUse", "NotCurrentUse")
-
-# Model accuracy
-observed.classes = testing$alc_c
-mean(predicted.classes == observed.classes)
 ```
+
+The accuracy of model 1 is 0.85.
 
 ### 2.2: Evaluating logistic regression model
 
 ```{r}
-fitted.results.2 = predict(model.2, testing, type = 'response') 
-fitted.results.p.2 = ifelse(fitted.results > 0.5,1,0)
+fitted.results.2 = predict(model_2, testing, type = 'response') 
+fitted.results.p.2 = ifelse(fitted.results.2 > 0.5,1,0)
 
 testing.outcome.2 = (as.numeric(testing$alc_consumption) - 1)
 
-misClasificError.2 = mean(fitted.results.p != testing.outcome.2, na.rm = T)
+misClasificError.2 = mean(fitted.results.p.2 != testing.outcome.2, na.rm = T)
 print(paste('Accuracy Model 2',1 - misClasificError.2))
-
-testProbs.2 = data.frame(obs = testing$alc_consumption,
-                        pred.logit.2 = fitted.results.2)
-
-calPlotData.2 = calibration(obs ~ pred.logit.2, 
-                          data = testProbs.2, 
-                          class = "NotCurrentUse", 
-                          cuts = 5)
-
-xyplot(calPlotData.2, auto.key = list(columns = 2))
-
-# Make predictions
-probabilities.2 = model.2 %>% predict(testing, type = "response")
-predicted.classes.2 = ifelse(probabilities > 0.5, "CurrentUse", "NotCurrentUse")
-# Model accuracy
-observed.classes.2 = testing$alc_consumption
-mean(predicted.classes.2 == observed.classes.2)
 ```
 
+The accuracy of model 2 is 0.80.
+
+### 2.3: Evaluating LASSO model
+
 ```{r}
-fitted.results.3 = predict(model.3, testing, type = 'response') 
-fitted.results.p.3 = ifelse(fitted.results > 0.5, 1, 0)
+fitted.results.3 = predict(model_3_final, x_test, type = 'response') 
+fitted.results.p.3 = ifelse(fitted.results.3 > 0.5, 1, 0)
 
 testing.outcome.3 = (as.numeric(testing$alc_consumption) - 1)
 
-misClasificError.3 = mean(fitted.results.p != testing.outcome.3, na.rm = T)
+misClasificError.3 = mean(fitted.results.p.3 != testing.outcome.3, na.rm = T)
 print(paste('Accuracy Model 3',1 - misClasificError.3))
-
-# Making predictions
-probabilities = model.3 %>% predict(newx = x_test)
-predicted.classes = ifelse(probabilities > 0.5, "CurrentUse", "NotCurrentUse")
-# Model accuracy
-observed.classes = testing$alc_consumption
-mean(predicted.classes == observed.classes)
 ```
 
-
+The accuracy of model 3 is 0.78.

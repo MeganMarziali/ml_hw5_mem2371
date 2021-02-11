@@ -52,7 +52,7 @@ alc_train = training$alc_consumption
 alc_test = testing$alc_consumption
 
 #Model.matrix shortcut to removing outcome variable from matrix
-x_train = model.matrix(alc_consumption~., training)[,-1]
+x_train = model.matrix(alc_consumption~., training)[,-1] # Check what the [-1] does
 x_test = model.matrix(alc_consumption~., testing)[,-1]
 ```
 
@@ -99,6 +99,7 @@ model.3$beta[,1]
 ### 2.1: Alpha and lambda cross-validation model
 
 ```{r}
-fitted.results = predict(model.1.train.final, testing, type = 'response') 
+fitted.results = predict(model.1.train.final, x_test, type = 'response') 
+fitted.results.p = ifelse(fitted.results > 0.5,1,0)
 ```
 
